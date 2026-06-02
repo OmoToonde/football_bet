@@ -9,13 +9,13 @@ from datetime import datetime
 
 # Maps our league slugs to football-data.co.uk CSV paths
 LEAGUE_CSV_URLS = {
-    "premier-league":  "https://www.football-data.co.uk/mmz4281/2425/E0.csv",
-    "championship":    "https://www.football-data.co.uk/mmz4281/2425/E1.csv",
-    "la-liga":         "https://www.football-data.co.uk/mmz4281/2425/SP1.csv",
-    "serie-a":         "https://www.football-data.co.uk/mmz4281/2425/I1.csv",
-    "bundesliga":      "https://www.football-data.co.uk/mmz4281/2425/D1.csv",
-    "ligue-1":         "https://www.football-data.co.uk/mmz4281/2425/F1.csv",
-    "eredivisie":      "https://www.football-data.co.uk/mmz4281/2425/N1.csv",
+    "premier-league":  "https://www.football-data.co.uk/mmz4281/2526/E0.csv",
+    "championship":    "https://www.football-data.co.uk/mmz4281/2526/E1.csv",
+    "la-liga":         "https://www.football-data.co.uk/mmz4281/2526/SP1.csv",
+    "serie-a":         "https://www.football-data.co.uk/mmz4281/2526/I1.csv",
+    "bundesliga":      "https://www.football-data.co.uk/mmz4281/2526/D1.csv",
+    "ligue-1":         "https://www.football-data.co.uk/mmz4281/2526/F1.csv",
+    "eredivisie":      "https://www.football-data.co.uk/mmz4281/2526/N1.csv",
 }
 
 # Columns we care about

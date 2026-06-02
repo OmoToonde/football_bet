@@ -7,9 +7,12 @@ from dataclasses import dataclass
 from backend.db.models import RiskLevel, FreshnessStatus
 
 
+# Forbidden in the model reasoning body — guaranteed-WIN language only.
+# "not guaranteed" is allowed (it's the disclaimer). We check the body before appending disclaimers.
 FORBIDDEN_PHRASES = [
-    "guaranteed", "banker", "lock", "sure bet", "100% safe",
-    "cannot lose", "free money", "definite", "certain to",
+    "guaranteed win", "guaranteed to win", "banker bet", "sure bet",
+    "100% safe", "cannot lose", "free money", "certain to win",
+    "will definitely win", "no way they lose",
 ]
 
 DISCLAIMER = "Predictions are not guaranteed. Bet responsibly."
@@ -122,5 +125,7 @@ def build_explanation(inp: ExplanationInput) -> str:
     disclaimer = LIVE_DISCLAIMER if inp.is_live else DISCLAIMER
     lines.append(disclaimer)
 
-    explanation = " ".join(lines)
-    return _validate(explanation)
+    # Validate the reasoning body BEFORE appending the disclaimer
+    body = " ".join(lines[:-1])  # all but the final disclaimer line
+    _validate(body)
+    return " ".join(lines)

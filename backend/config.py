@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     app_name: str = "AI Football Betting Intelligence"
-    debug: bool = True
+    debug: bool = False
     database_url: str = "sqlite+aiosqlite:///./football_bet.db"
 
     # Data sources — all free, no API keys required

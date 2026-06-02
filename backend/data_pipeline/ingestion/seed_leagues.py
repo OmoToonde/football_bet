@@ -16,7 +16,7 @@ LEAGUES = [
     {"name": "Champions League", "country": "Europe",      "slug": "champions-league",  "type": "european"},
 ]
 
-SEASON = "2024/25"
+SEASON = "2025/26"
 
 
 async def seed_leagues(db: AsyncSession) -> dict[str, int]:

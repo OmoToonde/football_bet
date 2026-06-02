@@ -24,9 +24,11 @@ def check_pre_match_freshness(
     odds_age = _age_seconds(odds_updated_at)
     injury_age = _age_seconds(injury_updated_at)
 
-    # Odds missing entirely → block
+    # Odds missing entirely → Incomplete, not Blocked.
+    # BLOCKED is reserved for live mode. Pre-match without odds still gets a model
+    # prediction but is labelled Incomplete so the UI warns the user.
     if odds_age == float("inf"):
-        return FreshnessStatus.BLOCKED
+        return FreshnessStatus.INCOMPLETE
 
     stale = settings.pre_match_stale_threshold
 
