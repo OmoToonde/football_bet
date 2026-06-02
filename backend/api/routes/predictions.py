@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from backend.db.database import get_db
-from backend.db.models import Prediction, FreshnessStatus, RiskLevel
+from backend.db.models import Prediction, ScorelineProbability, FreshnessStatus
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
 
@@ -42,7 +42,20 @@ async def get_match_prediction(match_id: int, db: AsyncSession = Depends(get_db)
     pred = result.scalars().first()
     if not pred:
         raise HTTPException(status_code=404, detail="No prediction found for this match")
-    return _format(pred)
+    return await _format_full(pred, db)
+
+
+@router.post("/match/{match_id}/generate")
+async def generate_match_prediction(match_id: int, db: AsyncSession = Depends(get_db)):
+    """On-demand prediction generation for a specific match."""
+    from backend.prediction_engine.predictor import generate_prediction
+    pred = await generate_prediction(db, match_id)
+    if not pred:
+        raise HTTPException(
+            status_code=422,
+            detail="Prediction blocked: data is stale or match not found."
+        )
+    return await _format_full(pred, db)
 
 
 def _format(p: Prediction) -> dict:
@@ -65,3 +78,22 @@ def _format(p: Prediction) -> dict:
         "lineups_confirmed": p.lineups_confirmed,
         "generated_at": p.generated_at.isoformat(),
     }
+
+
+async def _format_full(p: Prediction, db: AsyncSession) -> dict:
+    """Include scoreline probabilities in the response."""
+    base = _format(p)
+    scorelines_result = await db.execute(
+        select(ScorelineProbability)
+        .where(ScorelineProbability.prediction_id == p.id)
+        .order_by(ScorelineProbability.probability.desc())
+    )
+    base["scoreline_probabilities"] = [
+        {
+            "home_goals": s.home_goals,
+            "away_goals": s.away_goals,
+            "probability": s.probability,
+        }
+        for s in scorelines_result.scalars().all()
+    ]
+    return base

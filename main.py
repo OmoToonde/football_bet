@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.db.database import init_db
 from backend.api.routes import matches, predictions, leagues
+from backend.data_pipeline.scheduler import start_scheduler, stop_scheduler
 from backend.config import settings
 
 app = FastAPI(
@@ -27,6 +28,12 @@ app.include_router(leagues.router)
 @app.on_event("startup")
 async def startup():
     await init_db()
+    start_scheduler()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    stop_scheduler()
 
 
 @app.get("/")
