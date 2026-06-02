@@ -1,12 +1,87 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from backend.db.database import get_db
-from backend.db.models import Match, League, Team, MatchStatus
+from backend.db.models import Match, League, Team, MatchStatus, Prediction, PredictionMode
 
 router = APIRouter(prefix="/matches", tags=["matches"])
+
+
+async def _enrich(matches: list[Match], db: AsyncSession) -> list[dict]:
+    """Fetch team + league names for a list of matches."""
+    if not matches:
+        return []
+
+    team_ids = {m.home_team_id for m in matches} | {m.away_team_id for m in matches}
+    league_ids = {m.league_id for m in matches}
+
+    teams = {
+        t.id: t for t in
+        (await db.execute(select(Team).where(Team.id.in_(team_ids)))).scalars().all()
+    }
+    leagues = {
+        l.id: l for l in
+        (await db.execute(select(League).where(League.id.in_(league_ids)))).scalars().all()
+    }
+
+    # Latest prediction per match (one query)
+    match_ids = [m.id for m in matches]
+    pred_rows = (await db.execute(
+        select(Prediction)
+        .where(Prediction.match_id.in_(match_ids))
+        .where(Prediction.mode == PredictionMode.PRE_MATCH)
+        .order_by(Prediction.generated_at.desc())
+    )).scalars().all()
+    # Keep only most recent per match
+    preds: dict[int, Prediction] = {}
+    for p in pred_rows:
+        if p.match_id not in preds:
+            preds[p.match_id] = p
+
+    return [_format_match(m, teams, leagues, preds.get(m.id)) for m in matches]
+
+
+def _format_match(
+    m: Match,
+    teams: dict = None,
+    leagues: dict = None,
+    pred: Prediction = None,
+) -> dict:
+    home = teams.get(m.home_team_id) if teams else None
+    away = teams.get(m.away_team_id) if teams else None
+    league = leagues.get(m.league_id) if leagues else None
+
+    base = {
+        "id": m.id,
+        "home_team_id": m.home_team_id,
+        "home_team": home.name if home else None,
+        "away_team_id": m.away_team_id,
+        "away_team": away.name if away else None,
+        "league_id": m.league_id,
+        "league_name": league.name if league else None,
+        "league_slug": league.slug if league else None,
+        "kickoff_time": m.kickoff_time.isoformat() if m.kickoff_time else None,
+        "venue": m.venue,
+        "status": m.status.value,
+        "home_score": m.final_home_score,
+        "away_score": m.final_away_score,
+    }
+
+    if pred:
+        base["prediction_summary"] = {
+            "recommended_bet": pred.recommended_bet,
+            "expected_score": pred.expected_score,
+            "confidence_score": pred.confidence_score,
+            "risk_level": pred.risk_level.value,
+            "value_rating": pred.value_rating,
+            "data_freshness_status": pred.data_freshness_status.value,
+        }
+    else:
+        base["prediction_summary"] = None
+
+    return base
 
 
 @router.get("/today")
@@ -18,8 +93,7 @@ async def get_today_matches(db: AsyncSession = Depends(get_db)):
         .where(Match.kickoff_time < datetime.combine(today, datetime.max.time()))
         .order_by(Match.kickoff_time)
     )
-    matches = result.scalars().all()
-    return {"matches": [_format_match(m) for m in matches]}
+    return {"matches": await _enrich(result.scalars().all(), db)}
 
 
 @router.get("/upcoming")
@@ -31,8 +105,7 @@ async def get_upcoming_matches(db: AsyncSession = Depends(get_db)):
         .order_by(Match.kickoff_time)
         .limit(50)
     )
-    matches = result.scalars().all()
-    return {"matches": [_format_match(m) for m in matches]}
+    return {"matches": await _enrich(result.scalars().all(), db)}
 
 
 @router.get("/live")
@@ -40,8 +113,7 @@ async def get_live_matches(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Match).where(Match.status == MatchStatus.LIVE)
     )
-    matches = result.scalars().all()
-    return {"matches": [_format_match(m) for m in matches]}
+    return {"matches": await _enrich(result.scalars().all(), db)}
 
 
 @router.get("/{match_id}")
@@ -50,17 +122,5 @@ async def get_match(match_id: int, db: AsyncSession = Depends(get_db)):
     match = result.scalar_one_or_none()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
-    return _format_match(match)
-
-
-def _format_match(m: Match) -> dict:
-    return {
-        "id": m.id,
-        "home_team_id": m.home_team_id,
-        "away_team_id": m.away_team_id,
-        "league_id": m.league_id,
-        "kickoff_time": m.kickoff_time.isoformat() if m.kickoff_time else None,
-        "status": m.status.value,
-        "home_score": m.final_home_score,
-        "away_score": m.final_away_score,
-    }
+    enriched = await _enrich([match], db)
+    return enriched[0]

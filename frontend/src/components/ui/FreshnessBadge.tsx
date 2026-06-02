@@ -1,12 +1,12 @@
 "use client";
 
-const STATUS_STYLES: Record<string, string> = {
-  Fresh:        "text-[#22C55E] border-[#22C55E]",
-  Acceptable:   "text-[#38BDF8] border-[#38BDF8]",
-  Incomplete:   "text-[#F59E0B] border-[#F59E0B]",
-  Stale:        "text-[#F97316] border-[#F97316]",
-  Blocked:      "text-[#EF4444] border-[#EF4444]",
-  "Live Delayed": "text-[#EF4444] border-[#EF4444]",
+const STYLES: Record<string, string> = {
+  Fresh:          "text-[#22C55E] border-[#22C55E]/40",
+  Acceptable:     "text-[#38BDF8] border-[#38BDF8]/40",
+  Incomplete:     "text-[#F59E0B] border-[#F59E0B]/40",
+  Stale:          "text-[#F97316] border-[#F97316]/40",
+  Blocked:        "text-[#EF4444] border-[#EF4444]/40",
+  "Live Delayed": "text-[#EF4444] border-[#EF4444]/40",
 };
 
 function timeAgo(iso: string): string {
@@ -16,17 +16,12 @@ function timeAgo(iso: string): string {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
-interface Props {
-  status: string;
-  updatedAt: string;
-}
-
-export default function FreshnessBadge({ status, updatedAt }: Props) {
-  const style = STATUS_STYLES[status] ?? "text-[#94A3B8] border-[#94A3B8]";
+export default function FreshnessBadge({ status, updatedAt }: { status: string; updatedAt: string }) {
+  const style = STYLES[status] ?? "text-[#94A3B8] border-[#94A3B8]/40";
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs border rounded-full px-2 py-0.5 ${style}`}>
+    <span className={`inline-flex items-center gap-1.5 text-[10px] border rounded-full px-2 py-0.5 ${style}`}>
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      {status} · Updated {timeAgo(updatedAt)}
+      {status} · {timeAgo(updatedAt)}
     </span>
   );
 }
