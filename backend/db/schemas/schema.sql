@@ -1,0 +1,4 @@
+-- Core database schema
+-- Tables: users, teams, leagues, matches, match_data_snapshots,
+--         predictions, scoreline_probabilities, live_match_states,
+--         prediction_evaluations, user_bets
