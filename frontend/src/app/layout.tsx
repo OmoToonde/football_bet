@@ -34,10 +34,10 @@ export default function RootLayout({
         <nav className="sticky bottom-0 bg-[#0F172A] border-t border-[#1E293B] max-w-2xl mx-auto w-full">
           <div className="flex justify-around py-2">
             {[
-              { href: "/",                    label: "Home",      icon: "⚽" },
-              { href: "/live",                label: "Live",      icon: "🔴" },
+              { href: "/",                      label: "Home",    icon: "⚽" },
+              { href: "/live",                  label: "Live",    icon: "🔴" },
               { href: "/picks/high-confidence", label: "Picks",   icon: "⭐" },
-              { href: "/picks/value-bets",    label: "Value",     icon: "💰" },
+              { href: "/performance",           label: "Stats",   icon: "📊" },
             ].map(({ href, label, icon }) => (
               <a
                 key={href}

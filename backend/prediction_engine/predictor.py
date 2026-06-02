@@ -118,9 +118,11 @@ def _bet_type_key(bet: str) -> str:
 async def generate_prediction(
     db: AsyncSession,
     match_id: int,
+    force: bool = False,
 ) -> Prediction | None:
     """
     Full prediction pipeline for one match.
+    force=True bypasses freshness block — used for backfill/evaluation only.
     Returns the saved Prediction object, or None if blocked.
     """
     # ── Load match + related data ────────────────────────────────────────
@@ -152,9 +154,11 @@ async def generate_prediction(
         stats_updated_at  = snapshot.stats_updated_at if snapshot else None,
     )
 
-    if should_block_prediction(freshness):
+    if should_block_prediction(freshness) and not force:
         print(f"  ! Match {match_id}: blocked — freshness={freshness.value}")
         return None
+    if force and should_block_prediction(freshness):
+        freshness = FreshnessStatus.ACCEPTABLE  # downgrade but don't block
 
     # ── Build team features (with H2H and cache) ─────────────────────────
     print(f"  Building features: {home_team.name} vs {away_team.name} …")

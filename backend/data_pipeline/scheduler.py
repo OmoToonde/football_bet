@@ -42,6 +42,12 @@ async def _refresh_all():
                 except Exception as e:
                     logger.warning(f"Scheduler: prediction failed for match {match.id}: {e}")
 
+        # Evaluate any newly finished matches
+        async with AsyncSessionLocal() as db:
+            from backend.learning_loop.evaluator import run_batch_evaluation
+            result = await run_batch_evaluation(db)
+            logger.info(f"Scheduler: evaluated {result['evaluated']} predictions")
+
         logger.info("Scheduler: refresh complete")
     except Exception as e:
         logger.error(f"Scheduler: refresh error: {e}")
