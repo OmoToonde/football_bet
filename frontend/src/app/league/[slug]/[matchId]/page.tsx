@@ -4,6 +4,7 @@ import RiskBadge from "@/components/ui/RiskBadge";
 import FreshnessBadge from "@/components/ui/FreshnessBadge";
 import ProbabilityBar from "@/components/prediction/ProbabilityBar";
 import ScorelineProbabilities from "@/components/prediction/ScorelineProbabilities";
+import ExplanationCard from "@/components/prediction/ExplanationCard";
 import { formatKickoff } from "@/lib/api";
 
 export const revalidate = 30;
@@ -144,10 +145,10 @@ export default async function MatchDetailPage({ params }: Props) {
 
             {/* AI Explanation */}
             {p.explanation && (
-              <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-4 space-y-2">
-                <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide">AI Analysis</p>
-                <p className="text-sm text-[#94A3B8] leading-relaxed">{p.explanation}</p>
-              </div>
+              <ExplanationCard
+                explanation={p.explanation}
+                explanationJson={p.explanation_json}
+              />
             )}
           </>
         ) : (

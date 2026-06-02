@@ -80,6 +80,7 @@ export type Prediction = {
   risk_level: string;
   value_rating: number;
   explanation: string;
+  explanation_json: string | null;
   data_freshness_status: string;
   lineups_confirmed: boolean;
   generated_at: string;

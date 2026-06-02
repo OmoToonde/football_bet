@@ -74,6 +74,7 @@ def _format(p: Prediction) -> dict:
         "risk_level": p.risk_level.value,
         "value_rating": p.value_rating,
         "explanation": p.explanation,
+        "explanation_json": p.explanation_json,
         "data_freshness_status": p.data_freshness_status.value,
         "lineups_confirmed": p.lineups_confirmed,
         "generated_at": p.generated_at.isoformat(),

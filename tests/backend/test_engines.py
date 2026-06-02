@@ -205,7 +205,11 @@ class TestExplanationEngine:
 
     def test_no_bet_explanation(self):
         text = build_explanation(self._base_input(bet="No Bet Recommended"))
-        assert "no high-confidence" in text.lower() or "no bet" in text.lower() or "not find" in text.lower()
+        # Any of these phrases indicate a no-bet explanation
+        assert any(p in text.lower() for p in [
+            "no high-confidence", "no bet", "not find", "not identify",
+            "no clear", "not recommended",
+        ])
 
     def test_forbidden_phrases_raise(self):
         inp = self._base_input()

@@ -137,6 +137,7 @@ class Prediction(Base):
     risk_level: Mapped[RiskLevel] = mapped_column(Enum(RiskLevel))
     value_rating: Mapped[float | None] = mapped_column(Float)
     explanation: Mapped[str | None] = mapped_column(Text)
+    explanation_json: Mapped[str | None] = mapped_column(Text)   # StructuredExplanation JSON
     data_freshness_status: Mapped[FreshnessStatus] = mapped_column(Enum(FreshnessStatus))
     lineups_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
     prediction_status: Mapped[str] = mapped_column(String(50), default="active")

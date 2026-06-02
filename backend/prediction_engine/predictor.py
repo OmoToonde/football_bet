@@ -35,8 +35,9 @@ from backend.prediction_engine.engines.value_engine import (
     ValueInput, compute_value,
 )
 from backend.prediction_engine.engines.explanation_engine import (
-    ExplanationInput, build_explanation,
+    ExplanationInput, build_structured_explanation,
 )
+from backend.prediction_engine.engines.claude_explainer import render_with_claude
 
 
 def _pick_best_bet(outcome, score_out, confidence: float) -> str:
@@ -247,8 +248,8 @@ async def generate_prediction(
         bookmaker_odds    = ref_odds,
     ))
 
-    # ── Explanation ───────────────────────────────────────────────────────
-    explanation = build_explanation(ExplanationInput(
+    # ── Structured Explanation ────────────────────────────────────────────
+    expl_input = ExplanationInput(
         home_team         = home_team.name,
         away_team         = away_team.name,
         recommended_bet   = recommended_bet,
@@ -266,7 +267,19 @@ async def generate_prediction(
         away_form_score   = away_metrics.recent_form_score,
         risk_reasons      = risk_result["risk_reasons"],
         is_live           = False,
-    ))
+        over_2_5_prob     = score_out.over_2_5_probability,
+        btts_prob         = score_out.btts_probability,
+        home_h2h_score    = home_metrics.h2h_score,
+    )
+    structured_expl = build_structured_explanation(expl_input)
+    # Try Claude for richer prose; falls back to rule-based text silently
+    explanation_text = render_with_claude(
+        structured_expl,
+        home_team.name, away_team.name,
+        recommended_bet, final_confidence,
+        risk_result["risk_level"].value,
+    )
+    explanation_json = structured_expl.to_json()
 
     # ── Persist ───────────────────────────────────────────────────────────
     pred = Prediction(
@@ -284,7 +297,8 @@ async def generate_prediction(
         confidence_score      = final_confidence,
         risk_level            = risk_result["risk_level"],
         value_rating          = value_result["value_rating"],
-        explanation           = explanation,
+        explanation           = explanation_text,
+        explanation_json      = explanation_json,
         data_freshness_status = freshness,
         lineups_confirmed     = lineups_confirmed,
         prediction_status     = "active",
