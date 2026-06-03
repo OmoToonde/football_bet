@@ -14,7 +14,7 @@ async function fetchPerf<T>(path: string): Promise<T | null> {
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-4 text-center">
+    <div className="bg-[#111827] border border-[#1E293B] rounded-2xl p-4 text-center card-hover">
       <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-black text-[#F8FAFC] mt-1">{value}</p>
       {sub && <p className="text-xs text-[#94A3B8] mt-0.5">{sub}</p>}

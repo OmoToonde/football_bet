@@ -1,11 +1,12 @@
 import { api } from "@/lib/api";
-import PageHeader from "@/components/ui/PageHeader";
 import RiskBadge from "@/components/ui/RiskBadge";
 import FreshnessBadge from "@/components/ui/FreshnessBadge";
+import CircularConfidence from "@/components/ui/CircularConfidence";
+import MatchHero from "@/components/match/MatchHero";
 import ProbabilityBar from "@/components/prediction/ProbabilityBar";
 import ScorelineProbabilities from "@/components/prediction/ScorelineProbabilities";
 import ExplanationCard from "@/components/prediction/ExplanationCard";
-import { formatKickoff } from "@/lib/api";
+import Link from "next/link";
 
 export const revalidate = 30;
 
@@ -24,84 +25,80 @@ export default async function MatchDetailPage({ params }: Props) {
   const p = pred.status === "fulfilled" ? pred.value : null;
 
   if (!m) {
-    return (
-      <div className="px-4 py-8 text-center text-[#94A3B8]">
-        Match not found.
-      </div>
-    );
+    return <div className="px-4 py-8 text-center text-[#94A3B8]">Match not found.</div>;
   }
 
   const noBet = !p || p.recommended_bet === "No Bet Recommended";
 
   return (
     <div className="flex flex-col min-h-full">
-      <PageHeader
-        title={`${m.home_team} vs ${m.away_team}`}
-        subtitle={`${m.league_name} · ${formatKickoff(m.kickoff_time)}`}
-        backHref={`/league/${slug}`}
-        backLabel={m.league_name ?? "League"}
-      />
+      {/* Back link */}
+      <div className="px-4 pt-4">
+        <Link href={`/league/${slug}`} className="inline-flex items-center gap-1 text-[#94A3B8] text-sm hover:text-[#F8FAFC] transition-colors">
+          <span>←</span>
+          <span>{m.league_name ?? "League"}</span>
+        </Link>
+      </div>
 
-      <div className="flex-1 px-4 py-4 space-y-4">
-        {/* Score / Status banner */}
-        {m.status === "finished" && (
-          <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-4 text-center">
-            <p className="text-3xl font-black text-[#F8FAFC]">
-              {m.home_score} – {m.away_score}
-            </p>
-            <p className="text-xs text-[#94A3B8] mt-1">Full Time</p>
-          </div>
-        )}
-        {m.status === "live" && (
-          <div className="bg-[#111827] border border-[#EF4444]/30 rounded-xl p-4 text-center">
-            <p className="text-3xl font-black text-[#F8FAFC]">
-              {m.home_score} – {m.away_score}
-            </p>
-            <p className="text-xs text-[#EF4444] font-semibold animate-pulse mt-1">● LIVE</p>
-          </div>
-        )}
+      <div className="flex-1 px-4 py-4 space-y-3">
+        {/* Match hero */}
+        <MatchHero
+          homeTeam={m.home_team ?? "Home"}
+          awayTeam={m.away_team ?? "Away"}
+          status={m.status}
+          homeScore={m.home_score}
+          awayScore={m.away_score}
+          kickoff={m.kickoff_time}
+          leagueName={m.league_name}
+        />
 
-        {/* Prediction card */}
         {p ? (
           <>
-            {/* Recommendation */}
-            <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide">Recommended Bet</p>
-                  <p className={`text-xl font-bold mt-0.5 ${noBet ? "text-[#EF4444]" : "text-[#22C55E]"}`}>
+            {/* Hero recommendation card with circular confidence */}
+            <div className={`relative overflow-hidden bg-[#111827] border rounded-2xl p-4 ${
+              noBet ? "border-[#1E293B]" : "border-[#22C55E]/30 glow-green"
+            }`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-widest">Recommended Bet</p>
+                  <p className={`text-xl font-black mt-1 leading-tight ${noBet ? "text-[#EF4444]" : "gradient-text"}`}>
                     {p.recommended_bet}
                   </p>
+                  <div className="mt-2">
+                    <RiskBadge level={p.risk_level} />
+                  </div>
                 </div>
-                <RiskBadge level={p.risk_level} />
+                <CircularConfidence value={p.confidence_score ?? 0} size={76} />
               </div>
 
-              {/* Confidence + Value */}
-              <div className="flex gap-4 text-sm">
-                <div>
-                  <span className="text-[#94A3B8]">Confidence </span>
-                  <span className="font-bold text-[#F8FAFC]">{p.confidence_score?.toFixed(0)}%</span>
+              {/* Metric row */}
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                <div className="flex flex-col items-center bg-[#0F172A] rounded-xl py-2.5">
+                  <span className="text-[10px] text-[#94A3B8] uppercase tracking-wide">Exp. Score</span>
+                  <span className="text-base font-black text-[#38BDF8] mt-0.5">{p.expected_score ?? "—"}</span>
                 </div>
-                {p.value_rating != null && (
-                  <div>
-                    <span className="text-[#94A3B8]">Value </span>
-                    <span className="font-bold text-[#F59E0B]">{p.value_rating?.toFixed(1)}/10</span>
-                  </div>
-                )}
-                {p.expected_score && (
-                  <div>
-                    <span className="text-[#94A3B8]">Score </span>
-                    <span className="font-bold text-[#38BDF8]">{p.expected_score}</span>
-                  </div>
-                )}
+                <div className="flex flex-col items-center bg-[#0F172A] rounded-xl py-2.5">
+                  <span className="text-[10px] text-[#94A3B8] uppercase tracking-wide">Value</span>
+                  <span className="text-base font-black text-[#F59E0B] mt-0.5">
+                    {p.value_rating != null ? `${p.value_rating.toFixed(1)}` : "—"}
+                    <span className="text-[10px] text-[#94A3B8] font-normal">/10</span>
+                  </span>
+                </div>
+                <div className="flex flex-col items-center bg-[#0F172A] rounded-xl py-2.5">
+                  <span className="text-[10px] text-[#94A3B8] uppercase tracking-wide">Confidence</span>
+                  <span className="text-base font-black text-[#22C55E] mt-0.5">{p.confidence_score?.toFixed(0)}%</span>
+                </div>
               </div>
 
-              <FreshnessBadge status={p.data_freshness_status} updatedAt={p.generated_at} />
+              <div className="mt-3">
+                <FreshnessBadge status={p.data_freshness_status} updatedAt={p.generated_at} />
+              </div>
             </div>
 
             {/* Probability bar */}
             {!noBet && (
-              <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-4">
+              <div className="bg-[#111827] border border-[#1E293B] rounded-2xl p-4">
+                <p className="text-[10px] text-[#94A3B8] uppercase tracking-widest mb-3">Match Outcome</p>
                 <ProbabilityBar
                   homeTeam={m.home_team ?? "Home"}
                   awayTeam={m.away_team ?? "Away"}
@@ -112,29 +109,38 @@ export default async function MatchDetailPage({ params }: Props) {
               </div>
             )}
 
-            {/* xG */}
+            {/* xG comparison */}
             {p.home_xg != null && p.away_xg != null && (
-              <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-4">
-                <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide mb-3">Expected Goals (xG)</p>
-                <div className="grid grid-cols-3 text-center gap-2">
-                  <div>
-                    <p className="text-xs text-[#94A3B8] truncate">{m.home_team}</p>
-                    <p className="text-2xl font-black text-[#22C55E]">{p.home_xg.toFixed(2)}</p>
-                  </div>
-                  <div className="flex items-center justify-center">
-                    <span className="text-[#94A3B8] text-lg">vs</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[#94A3B8] truncate">{m.away_team}</p>
-                    <p className="text-2xl font-black text-[#38BDF8]">{p.away_xg.toFixed(2)}</p>
-                  </div>
-                </div>
+              <div className="bg-[#111827] border border-[#1E293B] rounded-2xl p-4">
+                <p className="text-[10px] text-[#94A3B8] uppercase tracking-widest mb-3">Expected Goals (xG)</p>
+                {(() => {
+                  const total = (p.home_xg ?? 0) + (p.away_xg ?? 0);
+                  const homePct = total > 0 ? ((p.home_xg ?? 0) / total) * 100 : 50;
+                  return (
+                    <>
+                      <div className="flex items-end justify-between mb-2">
+                        <div className="text-center">
+                          <p className="text-3xl font-black text-[#22C55E] leading-none">{p.home_xg.toFixed(2)}</p>
+                          <p className="text-[10px] text-[#94A3B8] mt-1 max-w-[100px] truncate">{m.home_team}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-3xl font-black text-[#38BDF8] leading-none">{p.away_xg.toFixed(2)}</p>
+                          <p className="text-[10px] text-[#94A3B8] mt-1 max-w-[100px] truncate">{m.away_team}</p>
+                        </div>
+                      </div>
+                      <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
+                        <div className="bg-[#22C55E] rounded-l-full" style={{ width: `${homePct}%` }} />
+                        <div className="bg-[#38BDF8] rounded-r-full" style={{ width: `${100 - homePct}%` }} />
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
 
             {/* Scoreline probabilities */}
             {p.scoreline_probabilities && p.scoreline_probabilities.length > 0 && (
-              <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-4">
+              <div className="bg-[#111827] border border-[#1E293B] rounded-2xl p-4">
                 <ScorelineProbabilities
                   scorelines={p.scoreline_probabilities}
                   homeTeam={m.home_team ?? "Home"}
@@ -145,15 +151,13 @@ export default async function MatchDetailPage({ params }: Props) {
 
             {/* AI Explanation */}
             {p.explanation && (
-              <ExplanationCard
-                explanation={p.explanation}
-                explanationJson={p.explanation_json}
-              />
+              <ExplanationCard explanation={p.explanation} explanationJson={p.explanation_json} />
             )}
           </>
         ) : (
-          <div className="bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-center">
-            <p className="text-[#94A3B8] text-sm">No prediction available for this match yet.</p>
+          <div className="bg-[#111827] border border-[#1E293B] rounded-2xl p-8 text-center">
+            <p className="text-3xl mb-2">🔮</p>
+            <p className="text-[#F8FAFC] text-sm font-medium">No prediction available yet</p>
             <p className="text-[#94A3B8] text-xs mt-1">Predictions are generated for upcoming fixtures.</p>
           </div>
         )}
