@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,10 +7,22 @@ from backend.api.routes import matches, predictions, leagues, performance, champ
 from backend.data_pipeline.scheduler import start_scheduler, stop_scheduler
 from backend.config import settings
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await init_db()
+    start_scheduler()
+    yield
+    # Shutdown
+    stop_scheduler()
+
+
 app = FastAPI(
     title=settings.app_name,
     description="Real-time AI football betting intelligence platform",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -25,17 +38,6 @@ app.include_router(predictions.router)
 app.include_router(leagues.router)
 app.include_router(performance.router)
 app.include_router(champions_league.router)
-
-
-@app.on_event("startup")
-async def startup():
-    await init_db()
-    start_scheduler()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    stop_scheduler()
 
 
 @app.get("/")
