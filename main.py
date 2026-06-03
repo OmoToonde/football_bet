@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.db.database import init_db
-from backend.api.routes import matches, predictions, leagues, performance
+from backend.api.routes import matches, predictions, leagues, performance, champions_league
 from backend.data_pipeline.scheduler import start_scheduler, stop_scheduler
 from backend.config import settings
 
@@ -24,6 +24,7 @@ app.include_router(matches.router)
 app.include_router(predictions.router)
 app.include_router(leagues.router)
 app.include_router(performance.router)
+app.include_router(champions_league.router)
 
 
 @app.on_event("startup")
