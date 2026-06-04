@@ -1,4 +1,5 @@
 import { formatKickoff } from "@/lib/api";
+import TeamBadge from "@/components/ui/TeamBadge";
 
 interface Props {
   homeTeam: string;
@@ -10,76 +11,50 @@ interface Props {
   leagueName: string | null;
 }
 
-function teamInitials(name: string): string {
-  const words = name.split(" ").filter(Boolean);
-  if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
-  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
-}
-
 export default function MatchHero({ homeTeam, awayTeam, status, homeScore, awayScore, kickoff, leagueName }: Props) {
   const isLive = status === "live";
   const isFinished = status === "finished";
+  const played = isLive || isFinished;
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-[#111827] to-[#0F172A] border border-[#1E293B] rounded-2xl p-5">
-      {/* Glow accents */}
-      <div className="absolute -top-16 -left-10 w-40 h-40 rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, #22C55E 0%, transparent 70%)" }} />
-      <div className="absolute -bottom-16 -right-10 w-40 h-40 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, #38BDF8 0%, transparent 70%)" }} />
-
-      <div className="relative">
-        {/* Status pill */}
-        <div className="flex justify-center mb-4">
-          {isLive ? (
-            <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 rounded-full px-3 py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse" />
-              LIVE NOW
-            </span>
-          ) : isFinished ? (
-            <span className="text-[10px] font-bold text-[#94A3B8] bg-[#0F172A] border border-[#1E293B] rounded-full px-3 py-1">
-              FULL TIME
-            </span>
-          ) : (
-            <span className="text-[10px] font-bold text-[#38BDF8] bg-[#38BDF8]/10 border border-[#38BDF8]/30 rounded-full px-3 py-1">
-              {formatKickoff(kickoff).toUpperCase()}
-            </span>
-          )}
-        </div>
-
-        {/* Teams */}
-        <div className="flex items-center justify-between gap-3">
-          {/* Home */}
-          <div className="flex-1 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-[#1E293B] flex items-center justify-center mb-2">
-              <span className="text-lg font-black text-[#F8FAFC]">{teamInitials(homeTeam)}</span>
-            </div>
-            <p className="text-xs font-semibold text-[#F8FAFC] leading-tight">{homeTeam}</p>
-          </div>
-
-          {/* Score / VS */}
-          <div className="flex flex-col items-center px-2">
-            {isFinished || isLive ? (
-              <p className="text-3xl font-black text-[#F8FAFC] tabular-nums">
-                {homeScore ?? 0}<span className="text-[#475569] mx-1">–</span>{awayScore ?? 0}
-              </p>
-            ) : (
-              <p className="text-2xl font-black text-[#475569]">VS</p>
-            )}
-          </div>
-
-          {/* Away */}
-          <div className="flex-1 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-[#1E293B] flex items-center justify-center mb-2">
-              <span className="text-lg font-black text-[#F8FAFC]">{teamInitials(awayTeam)}</span>
-            </div>
-            <p className="text-xs font-semibold text-[#F8FAFC] leading-tight">{awayTeam}</p>
-          </div>
-        </div>
-
-        {leagueName && (
-          <p className="text-center text-[10px] text-[#94A3B8] mt-4">{leagueName}</p>
+    <div className="bg-[#111827] border border-[#1E293B] rounded-2xl px-4 pt-4 pb-5">
+      {/* Competition + status */}
+      <div className="flex items-center justify-center gap-2 mb-5">
+        {leagueName && <span className="text-[11px] text-[#94A3B8] font-medium">{leagueName}</span>}
+        {isLive && (
+          <span className="flex items-center gap-1 text-[10px] font-bold text-[#22C55E]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />LIVE
+          </span>
         )}
+      </div>
+
+      {/* Teams + score */}
+      <div className="flex items-start justify-between gap-2">
+        {/* Home */}
+        <div className="flex-1 flex flex-col items-center text-center gap-2">
+          <TeamBadge name={homeTeam} size={52} />
+          <p className="text-sm font-semibold text-[#F8FAFC] leading-tight">{homeTeam}</p>
+        </div>
+
+        {/* Center */}
+        <div className="flex flex-col items-center justify-center pt-3 px-1 min-w-[80px]">
+          {played ? (
+            <p className="text-4xl font-black text-[#F8FAFC] tabular-nums whitespace-nowrap">
+              {homeScore ?? 0}<span className="text-[#475569] mx-1.5">-</span>{awayScore ?? 0}
+            </p>
+          ) : (
+            <p className="text-2xl font-black text-[#475569]">VS</p>
+          )}
+          <span className="text-[10px] text-[#94A3B8] mt-1.5">
+            {isFinished ? "Full Time" : isLive ? "In play" : formatKickoff(kickoff)}
+          </span>
+        </div>
+
+        {/* Away */}
+        <div className="flex-1 flex flex-col items-center text-center gap-2">
+          <TeamBadge name={awayTeam} size={52} />
+          <p className="text-sm font-semibold text-[#F8FAFC] leading-tight">{awayTeam}</p>
+        </div>
       </div>
     </div>
   );

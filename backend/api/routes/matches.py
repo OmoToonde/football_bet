@@ -116,6 +116,36 @@ async def get_live_matches(db: AsyncSession = Depends(get_db)):
     return {"matches": await _enrich(result.scalars().all(), db)}
 
 
+@router.get("/recent")
+async def get_recent_matches(days: int = 45, db: AsyncSession = Depends(get_db)):
+    """Recent finished + upcoming matches across all leagues, for a FotMob-style list."""
+    now = datetime.utcnow()
+    result = await db.execute(
+        select(Match)
+        .where(Match.kickoff_time >= now - timedelta(days=days))
+        .where(Match.kickoff_time <= now + timedelta(days=14))
+        .order_by(Match.kickoff_time.desc())
+        .limit(200)
+    )
+    enriched = await _enrich(result.scalars().all(), db)
+
+    # Dedupe matches that appear under two data-source name formats
+    # (e.g. "West Ham United" vs "West Ham"). Key on date + first 4 chars of each team.
+    seen: set = set()
+    deduped = []
+    for m in enriched:
+        d = (m.get("kickoff_time") or "")[:10]
+        h = (m.get("home_team") or "")[:4].lower()
+        a = (m.get("away_team") or "")[:4].lower()
+        key = (d, h, a)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(m)
+
+    return {"matches": deduped[:120]}
+
+
 @router.get("/{match_id}")
 async def get_match(match_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Match).where(Match.id == match_id))

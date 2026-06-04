@@ -41,7 +41,7 @@ async def get_league_matches_by_slug(
     if not league:
         raise HTTPException(status_code=404, detail=f"League '{slug}' not found")
 
-    cutoff_past   = datetime.utcnow() - timedelta(days=7)
+    cutoff_past   = datetime.utcnow() - timedelta(days=45)
     cutoff_future = datetime.utcnow() + timedelta(days=days)
 
     matches_result = await db.execute(

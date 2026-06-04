@@ -10,6 +10,7 @@ export const api = {
   getLeagues:          ()                => apiFetch<{ leagues: League[] }>("/leagues/"),
   getLeagueBySlug:     (slug: string)    => apiFetch<League>(`/leagues/slug/${slug}`),
   getLeagueMatches:    (slug: string)    => apiFetch<{ league: League; matches: Match[] }>(`/leagues/slug/${slug}/matches`),
+  getRecentMatches:    ()                => apiFetch<{ matches: Match[] }>("/matches/recent", 60),
   getTodayMatches:     ()                => apiFetch<{ matches: Match[] }>("/matches/today", 60),
   getLiveMatches:      ()                => apiFetch<{ matches: Match[] }>("/matches/live", 10),
   getUpcomingMatches:  ()                => apiFetch<{ matches: Match[] }>("/matches/upcoming"),
