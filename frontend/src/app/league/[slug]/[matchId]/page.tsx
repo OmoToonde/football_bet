@@ -45,6 +45,8 @@ export default async function MatchDetailPage({ params }: Props) {
         <MatchHero
           homeTeam={m.home_team ?? "Home"}
           awayTeam={m.away_team ?? "Away"}
+          homeLogo={m.home_logo}
+          awayLogo={m.away_logo}
           status={m.status}
           homeScore={m.home_score}
           awayScore={m.away_score}

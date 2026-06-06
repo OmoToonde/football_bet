@@ -3,9 +3,52 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from backend.db.database import get_db
-from backend.db.models import Prediction, ScorelineProbability, FreshnessStatus
+from backend.db.models import Prediction, ScorelineProbability, FreshnessStatus, Match, Team, League
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
+
+
+async def _enrich_picks(preds: list[Prediction], db: AsyncSession) -> list[dict]:
+    """Attach team names, logos, and league slug to a list of predictions."""
+    if not preds:
+        return []
+    match_ids = {p.match_id for p in preds}
+    matches = {
+        m.id: m for m in
+        (await db.execute(select(Match).where(Match.id.in_(match_ids)))).scalars().all()
+    }
+    team_ids = set()
+    league_ids = set()
+    for m in matches.values():
+        team_ids.update([m.home_team_id, m.away_team_id])
+        league_ids.add(m.league_id)
+    teams = {
+        t.id: t for t in
+        (await db.execute(select(Team).where(Team.id.in_(team_ids)))).scalars().all()
+    }
+    leagues = {
+        l.id: l for l in
+        (await db.execute(select(League).where(League.id.in_(league_ids)))).scalars().all()
+    }
+
+    out = []
+    for p in preds:
+        d = _format(p)
+        m = matches.get(p.match_id)
+        if m:
+            home = teams.get(m.home_team_id)
+            away = teams.get(m.away_team_id)
+            league = leagues.get(m.league_id)
+            d.update({
+                "home_team": home.name if home else None,
+                "home_logo": home.logo_url if home else None,
+                "away_team": away.name if away else None,
+                "away_logo": away.logo_url if away else None,
+                "league_slug": league.slug if league else None,
+                "league_name": league.name if league else None,
+            })
+        out.append(d)
+    return out
 
 
 @router.get("/high-confidence")
@@ -17,7 +60,7 @@ async def get_high_confidence(db: AsyncSession = Depends(get_db)):
         .order_by(Prediction.confidence_score.desc())
         .limit(10)
     )
-    return {"predictions": [_format(p) for p in result.scalars().all()]}
+    return {"predictions": await _enrich_picks(result.scalars().all(), db)}
 
 
 @router.get("/value-bets")
@@ -28,7 +71,7 @@ async def get_value_bets(db: AsyncSession = Depends(get_db)):
         .order_by(Prediction.value_rating.desc())
         .limit(10)
     )
-    return {"predictions": [_format(p) for p in result.scalars().all()]}
+    return {"predictions": await _enrich_picks(result.scalars().all(), db)}
 
 
 @router.get("/match/{match_id}")

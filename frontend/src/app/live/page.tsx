@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import MatchCard from "@/components/match/MatchCard";
+import MatchRow from "@/components/match/MatchRow";
 import PageHeader from "@/components/ui/PageHeader";
 
 export const revalidate = 10;
@@ -22,12 +22,14 @@ export default async function LivePage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            <p className="text-xs text-[#EF4444] font-medium mb-3 flex items-center gap-1.5">
+          <div>
+            <p className="text-xs text-[#EF4444] font-medium mb-3 flex items-center gap-1.5 px-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse" />
               Live High Risk · Predictions update in real-time
             </p>
-            {matches.map((m) => <MatchCard key={m.id} match={m} />)}
+            <div className="bg-[#111827] border border-[#1E293B] rounded-xl overflow-hidden divide-y divide-[#1E293B]">
+              {matches.map((m) => <MatchRow key={m.id} match={m} />)}
+            </div>
           </div>
         )}
       </div>

@@ -45,13 +45,13 @@ export default function MatchRow({ match: m }: { match: Match }) {
         {/* Teams */}
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2">
-            <TeamBadge name={m.home_team ?? "?"} size={22} />
+            <TeamBadge name={m.home_team ?? "?"} logo={m.home_logo} size={22} />
             <span className={`text-sm truncate ${homeWin ? "font-bold text-[#F8FAFC]" : "text-[#CBD5E1]"}`}>
               {m.home_team}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <TeamBadge name={m.away_team ?? "?"} size={22} />
+            <TeamBadge name={m.away_team ?? "?"} logo={m.away_logo} size={22} />
             <span className={`text-sm truncate ${awayWin ? "font-bold text-[#F8FAFC]" : "text-[#CBD5E1]"}`}>
               {m.away_team}
             </span>

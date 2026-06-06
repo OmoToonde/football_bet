@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+
 // Deterministic colour per team name so each club keeps a consistent badge colour.
 const PALETTE = [
   "#EF4444", "#F97316", "#F59E0B", "#22C55E", "#10B981",
@@ -20,19 +23,37 @@ function initials(name: string): string {
 
 interface Props {
   name: string;
+  logo?: string | null;
   size?: number;
 }
 
-export default function TeamBadge({ name, size = 24 }: Props) {
+export default function TeamBadge({ name, logo, size = 24 }: Props) {
+  const [failed, setFailed] = useState(false);
+
+  // Render the real crest when available and not errored
+  if (logo && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logo}
+        alt={name}
+        width={size}
+        height={size}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="object-contain shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   const color = colorFor(name);
   return (
     <span
       className="inline-flex items-center justify-center rounded-full font-bold shrink-0"
       style={{
-        width: size,
-        height: size,
-        background: `${color}22`,
-        color,
+        width: size, height: size,
+        background: `${color}22`, color,
         border: `1.5px solid ${color}66`,
         fontSize: size * 0.38,
       }}

@@ -47,8 +47,10 @@ export type Match = {
   id: number;
   home_team_id: number;
   home_team: string | null;
+  home_logo: string | null;
   away_team_id: number;
   away_team: string | null;
+  away_logo: string | null;
   league_id: number;
   league_name: string | null;
   league_slug: string | null;
@@ -86,6 +88,13 @@ export type Prediction = {
   lineups_confirmed: boolean;
   generated_at: string;
   scoreline_probabilities?: ScorelineProbability[];
+  // present on picks endpoints
+  home_team?: string | null;
+  home_logo?: string | null;
+  away_team?: string | null;
+  away_logo?: string | null;
+  league_slug?: string | null;
+  league_name?: string | null;
 };
 
 export function formatKickoff(iso: string): string {

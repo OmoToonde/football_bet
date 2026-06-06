@@ -4,6 +4,8 @@ import TeamBadge from "@/components/ui/TeamBadge";
 interface Props {
   homeTeam: string;
   awayTeam: string;
+  homeLogo?: string | null;
+  awayLogo?: string | null;
   status: string;
   homeScore: number | null;
   awayScore: number | null;
@@ -11,7 +13,7 @@ interface Props {
   leagueName: string | null;
 }
 
-export default function MatchHero({ homeTeam, awayTeam, status, homeScore, awayScore, kickoff, leagueName }: Props) {
+export default function MatchHero({ homeTeam, awayTeam, homeLogo, awayLogo, status, homeScore, awayScore, kickoff, leagueName }: Props) {
   const isLive = status === "live";
   const isFinished = status === "finished";
   const played = isLive || isFinished;
@@ -32,7 +34,7 @@ export default function MatchHero({ homeTeam, awayTeam, status, homeScore, awayS
       <div className="flex items-start justify-between gap-2">
         {/* Home */}
         <div className="flex-1 flex flex-col items-center text-center gap-2">
-          <TeamBadge name={homeTeam} size={52} />
+          <TeamBadge name={homeTeam} logo={homeLogo} size={52} />
           <p className="text-sm font-semibold text-[#F8FAFC] leading-tight">{homeTeam}</p>
         </div>
 
@@ -52,7 +54,7 @@ export default function MatchHero({ homeTeam, awayTeam, status, homeScore, awayS
 
         {/* Away */}
         <div className="flex-1 flex flex-col items-center text-center gap-2">
-          <TeamBadge name={awayTeam} size={52} />
+          <TeamBadge name={awayTeam} logo={awayLogo} size={52} />
           <p className="text-sm font-semibold text-[#F8FAFC] leading-tight">{awayTeam}</p>
         </div>
       </div>
